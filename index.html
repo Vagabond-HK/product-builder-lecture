@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>로또 번호 생성기</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+    background: #14202B;
+    color: #F1E9D8;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 60px 20px;
+  }
+
+  h1 {
+    font-size: 1.6rem;
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+  }
+
+  p.desc {
+    color: #9FB0B8;
+    font-size: 0.9rem;
+    margin-bottom: 36px;
+  }
+
+  #generate-btn {
+    background: #B0925A;
+    color: #14202B;
+    border: none;
+    padding: 17px 43px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.2s ease;
+  }
+
+  #generate-btn:hover { background: #C6A56C; }
+  #generate-btn:active { transform: scale(0.97); }
+
+  #result {
+    margin-top: 44px;
+    width: 100%;
+    max-width: 520px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .set-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #1B2E3B;
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+
+  .set-label {
+    font-size: 0.78rem;
+    color: #9FB0B8;
+    width: 44px;
+    flex-shrink: 0;
+  }
+
+  .balls {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .ball {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #14202B;
+    flex-shrink: 0;
+  }
+
+  /* 번호대별 색상 (한국 로또 기준) */
+  .b1 { background: #E8C547; }  /* 1-10 노랑 */
+  .b2 { background: #5B9BD5; color: #fff; } /* 11-20 파랑 */
+  .b3 { background: #D9534F; color: #fff; } /* 21-30 빨강 */
+  .b4 { background: #A0A0A0; color: #fff; } /* 31-40 회색 */
+  .b5 { background: #6FBF73; color: #fff; } /* 41-45 초록 */
+</style>
+</head>
+<body>
+
+<h1>로또 번호 생성기</h1>
+<p class="desc">버튼을 누르면 5세트를 한 번에 생성합니다.</p>
+
+<button id="generate-btn">번호 생성</button>
+
+<div id="result"></div>
+
+<script>
+  function ballClass(n) {
+    if (n <= 10) return 'b1';
+    if (n <= 20) return 'b2';
+    if (n <= 30) return 'b3';
+    if (n <= 40) return 'b4';
+    return 'b5';
+  }
+
+  function generateSet() {
+    const pool = Array.from({ length: 45 }, (_, i) => i + 1);
+    const picked = [];
+    for (let i = 0; i < 6; i++) {
+      const idx = Math.floor(Math.random() * pool.length);
+      picked.push(pool.splice(idx, 1)[0]);
+    }
+    return picked.sort((a, b) => a - b);
+  }
+
+  document.getElementById('generate-btn').addEventListener('click', () => {
+    const resultEl = document.getElementById('result');
+    resultEl.innerHTML = '';
+
+    for (let s = 1; s <= 5; s++) {
+      const nums = generateSet();
+      const row = document.createElement('div');
+      row.className = 'set-row';
+
+      const label = document.createElement('span');
+      label.className = 'set-label';
+      label.textContent = `${s}세트`;
+      row.appendChild(label);
+
+      const ballsWrap = document.createElement('div');
+      ballsWrap.className = 'balls';
+      nums.forEach(n => {
+        const ball = document.createElement('span');
+        ball.className = `ball ${ballClass(n)}`;
+        ball.textContent = n;
+        ballsWrap.appendChild(ball);
+      });
+      row.appendChild(ballsWrap);
+
+      resultEl.appendChild(row);
+    }
+  });
+</script>
+
+</body>
+</html>
