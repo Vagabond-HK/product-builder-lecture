@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>휴가계 신청서</title>
+<title>Vacation Request Form</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -82,7 +82,7 @@
 
   form {
     width: 100%;
-    max-width: 560px;
+    max-width: 720px;
     background: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: 12px;
@@ -135,11 +135,15 @@
 
   .date-period-group {
     display: flex;
-    gap: 6px;
+    gap: 4px;
+    min-width: 0;
   }
 
-  .date-period-group input[type="date"] { flex: 2; min-width: 118px; }
-  .date-period-group select { flex: 1; min-width: 62px; }
+  .date-period-group .row-start,
+  .date-period-group .row-end { flex: 1 1 auto; min-width: 0; width: 100%; }
+
+  .date-period-group .row-start-period,
+  .date-period-group .row-end-period { flex: 0 0 auto; width: auto; min-width: 44px; }
 
   input[readonly] {
     color: var(--accent);
@@ -147,47 +151,73 @@
     cursor: default;
   }
 
-  .table-wrapper {
-    overflow-x: auto;
-  }
-
-  table.leave-table {
+  #leave-rows {
     width: 100%;
-    min-width: 620px;
-    border-collapse: collapse;
   }
 
-  .leave-table th, .leave-table td {
-    padding: 6px;
-    text-align: left;
-    vertical-align: top;
+  .leave-row {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
   }
 
-  .leave-table th {
-    font-size: 0.72rem;
-    font-weight: 500;
+  .leave-row-fields {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .leave-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .leave-field label {
+    font-size: 0.7rem;
     color: var(--text-muted);
-    white-space: nowrap;
   }
 
-  .leave-table td:nth-child(1) { width: 110px; }
-  .leave-table td:nth-child(4) { width: 90px; }
-  .leave-table td:nth-child(6) { width: 34px; }
+  .leave-field.type { flex: 1 1 130px; min-width: 110px; }
+  .leave-field.date { flex: 1 1 190px; min-width: 170px; }
+  .leave-field.days { flex: 0 1 90px; min-width: 80px; }
+  .leave-field.remove { flex: 0 0 auto; }
 
-  .leave-table input, .leave-table select {
+  .leave-field.remarks {
+    width: 100%;
+  }
+
+  .leave-row input, .leave-row select {
     padding: 8px 10px;
     font-size: 0.85rem;
+  }
+
+  .row-days { min-width: 0; }
+
+  textarea.row-remarks {
+    width: 100%;
+    resize: vertical;
+    min-height: 52px;
+    font-family: inherit;
+    font-size: 0.85rem;
+    padding: 8px 10px;
   }
 
   .remove-row-btn {
     background: none;
     border: 1px solid var(--border);
     color: var(--error);
-    width: 30px;
-    height: 30px;
+    width: 26px;
+    height: 26px;
+    padding: 0;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     line-height: 1;
   }
 
@@ -271,81 +301,67 @@
 </head>
 <body>
 
-<button id="theme-toggle" aria-label="테마 전환" title="다크/화이트 모드 전환">🌙</button>
+<button id="theme-toggle" aria-label="Toggle theme" title="Switch dark/light mode">🌙</button>
 
-<h1>휴가계 신청서</h1>
-<p class="desc">아래 항목을 작성 후 제출하면 담당 부서로 자동 전송됩니다.</p>
+<h1>Vacation Request Form</h1>
+<p class="desc">Fill out the form below and submit — it will be sent automatically to the relevant department.</p>
 
 <form id="vacation-form" action="https://formspree.io/f/mbdngzkz" method="POST">
-  <div class="section-title">신청자 정보</div>
+  <div class="section-title">Applicant Information</div>
 
   <div class="row">
     <div class="field">
-      <label for="name">성명<span class="req">*</span></label>
-      <input type="text" id="name" name="성명" required autocomplete="name">
+      <label for="name">Full Name<span class="req">*</span></label>
+      <input type="text" id="name" name="full_name" required autocomplete="name">
     </div>
     <div class="field">
-      <label for="dept">소속(부서)<span class="req">*</span></label>
-      <input type="text" id="dept" name="소속부서" required>
+      <label for="dept">Department<span class="req">*</span></label>
+      <input type="text" id="dept" name="department" required>
     </div>
   </div>
 
   <div class="row">
     <div class="field">
-      <label for="position">직급/직책</label>
-      <input type="text" id="position" name="직급직책">
+      <label for="position">Position/Title</label>
+      <input type="text" id="position" name="position">
     </div>
     <div class="field">
-      <label for="empno">사번</label>
-      <input type="text" id="empno" name="사번">
+      <label for="empno">Employee ID</label>
+      <input type="text" id="empno" name="employee_id">
     </div>
   </div>
 
   <div class="row">
     <div class="field">
-      <label for="email">이메일(회신용)<span class="req">*</span></label>
+      <label for="email">Email (for reply)<span class="req">*</span></label>
       <input type="email" id="email" name="email" required autocomplete="email">
     </div>
     <div class="field">
-      <label for="phone">비상연락처</label>
-      <input type="tel" id="phone" name="비상연락처" placeholder="010-0000-0000">
+      <label for="phone">Emergency Contact</label>
+      <input type="tel" id="phone" name="emergency_contact" placeholder="e.g. 010-0000-0000">
     </div>
   </div>
 
-  <div class="section-title">휴가 정보</div>
-  <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: -12px;">여러 종류의 휴가를 한 번에 신청할 수 있습니다. 항목을 추가해 입력하세요.</p>
+  <div class="section-title">Leave Details</div>
+  <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: -12px;">You can apply for multiple types of leave in one submission. Add rows as needed.</p>
 
-  <div class="table-wrapper">
-    <table class="leave-table">
-      <thead>
-        <tr>
-          <th>휴가종류</th>
-          <th>시작일</th>
-          <th>종료일</th>
-          <th>휴가일수</th>
-          <th>비고</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody id="leave-rows"></tbody>
-    </table>
-  </div>
+  <div id="leave-rows"></div>
 
-  <button type="button" id="add-row-btn">+ 휴가 항목 추가</button>
+  <button type="button" id="add-row-btn">+ Add Leave Item</button>
 
   <div class="total-days-row">
-    <span>총 휴가일수</span>
-    <span class="value" id="total-days">0일</span>
+    <span>Total Days</span>
+    <span class="value" id="total-days">0 days</span>
   </div>
 
   <div class="field">
-    <label for="applydate">신청일</label>
-    <input type="date" id="applydate" name="신청일">
+    <label for="applydate">Application Date</label>
+    <input type="date" id="applydate" name="application_date">
   </div>
 
-  <input type="hidden" name="_subject" value="휴가계 신청서 제출">
+  <input type="hidden" name="_subject" value="Vacation Request Form Submission">
 
-  <button type="submit" id="submit-btn">신청서 제출</button>
+  <button type="submit" id="submit-btn">Submit Request</button>
 </form>
 
 <div id="status-msg"></div>
@@ -368,68 +384,80 @@
     applyTheme(current === 'light' ? 'dark' : 'light');
   });
 
-  // 신청일 기본값 = 오늘
+  // Default application date = today
   document.getElementById('applydate').valueAsDate = new Date();
 
-  // 휴가 항목 테이블 (휴가종류 / 시작일 / 종료일 / 휴가일수 / 비고)
+  // Leave item cards (Leave Type / Start Date / End Date / Days / Remarks)
   const leaveRowsBody = document.getElementById('leave-rows');
   const addRowBtn = document.getElementById('add-row-btn');
   const totalDaysEl = document.getElementById('total-days');
   let rowCounter = 0;
 
+  function formatDays(n) {
+    return `${n} day${n === 1 ? '' : 's'}`;
+  }
+
   function createLeaveRow() {
     rowCounter++;
     const idx = rowCounter;
-    const tr = document.createElement('tr');
-    tr.className = 'leave-row';
-    tr.innerHTML = `
-      <td>
-        <select name="휴가종류_${idx}" required>
-          <option value="">선택</option>
-          <option value="연차">연차</option>
-          <option value="병가">병가</option>
-          <option value="경조사">경조사</option>
-          <option value="공가">공가</option>
-          <option value="기타">기타</option>
-        </select>
-      </td>
-      <td>
-        <div class="date-period-group">
-          <input type="date" name="시작일_${idx}" class="row-start" required>
-          <select name="시작구분_${idx}" class="row-start-period">
-            <option value="오전">오전</option>
-            <option value="오후">오후</option>
+    const row = document.createElement('div');
+    row.className = 'leave-row';
+    row.innerHTML = `
+      <div class="leave-row-fields">
+        <div class="leave-field type">
+          <label>Leave Type</label>
+          <select name="leave_type_${idx}" required>
+            <option value="">Select</option>
+            <option value="Annual">Annual</option>
+            <option value="Sick">Sick</option>
+            <option value="Bereavement">Bereavement</option>
+            <option value="Official">Official</option>
+            <option value="Other">Other</option>
           </select>
         </div>
-      </td>
-      <td>
-        <div class="date-period-group">
-          <input type="date" name="종료일_${idx}" class="row-end" required>
-          <select name="종료구분_${idx}" class="row-end-period">
-            <option value="오전">오전</option>
-            <option value="오후" selected>오후</option>
-          </select>
+        <div class="leave-field date">
+          <label>Start Date</label>
+          <div class="date-period-group">
+            <input type="date" name="start_date_${idx}" class="row-start" required>
+            <select name="start_period_${idx}" class="row-start-period">
+              <option value="AM">AM</option>
+              <option value="PM">PM</option>
+            </select>
+          </div>
         </div>
-      </td>
-      <td>
-        <input type="text" name="휴가일수_${idx}" class="row-days" readonly placeholder="자동계산">
-      </td>
-      <td>
-        <input type="text" name="비고_${idx}" placeholder="비고">
-      </td>
-      <td>
-        <button type="button" class="remove-row-btn" title="행 삭제">✕</button>
-      </td>
+        <div class="leave-field date">
+          <label>End Date</label>
+          <div class="date-period-group">
+            <input type="date" name="end_date_${idx}" class="row-end" required>
+            <select name="end_period_${idx}" class="row-end-period">
+              <option value="AM">AM</option>
+              <option value="PM" selected>PM</option>
+            </select>
+          </div>
+        </div>
+        <div class="leave-field days">
+          <label>Days</label>
+          <input type="text" name="leave_days_${idx}" class="row-days" readonly placeholder="Auto">
+        </div>
+        <div class="leave-field remove">
+          <label>&nbsp;</label>
+          <button type="button" class="remove-row-btn" title="Remove row">✕</button>
+        </div>
+      </div>
+      <div class="leave-field remarks">
+        <label>Remarks</label>
+        <textarea name="remarks_${idx}" class="row-remarks" rows="2" placeholder="Remarks"></textarea>
+      </div>
     `;
-    return tr;
+    return row;
   }
 
-  function calcRowDays(tr) {
-    const startInput = tr.querySelector('.row-start');
-    const endInput = tr.querySelector('.row-end');
-    const startPeriodInput = tr.querySelector('.row-start-period');
-    const endPeriodInput = tr.querySelector('.row-end-period');
-    const daysInput = tr.querySelector('.row-days');
+  function calcRowDays(row) {
+    const startInput = row.querySelector('.row-start');
+    const endInput = row.querySelector('.row-end');
+    const startPeriodInput = row.querySelector('.row-start-period');
+    const endPeriodInput = row.querySelector('.row-end-period');
+    const daysInput = row.querySelector('.row-days');
 
     const startVal = startInput.value;
     const endVal = endInput.value;
@@ -446,7 +474,7 @@
     const endPeriod = endPeriodInput.value;
 
     if (endDate < startDate) {
-      daysInput.value = '날짜 오류';
+      daysInput.value = 'Date Error';
       updateTotalDays();
       return;
     }
@@ -454,22 +482,22 @@
     const msPerDay = 24 * 60 * 60 * 1000;
 
     if (startDate.getTime() === endDate.getTime()) {
-      if (startPeriod === '오후' && endPeriod === '오전') {
-        daysInput.value = '날짜 오류';
+      if (startPeriod === 'PM' && endPeriod === 'AM') {
+        daysInput.value = 'Date Error';
         updateTotalDays();
         return;
       }
       const totalDays = (startPeriod === endPeriod) ? 0.5 : 1;
-      daysInput.value = `${totalDays}일`;
+      daysInput.value = formatDays(totalDays);
       updateTotalDays();
       return;
     }
 
     let totalDays = Math.round((endDate - startDate) / msPerDay) + 1;
-    if (startPeriod === '오후') totalDays -= 0.5;
-    if (endPeriod === '오전') totalDays -= 0.5;
+    if (startPeriod === 'PM') totalDays -= 0.5;
+    if (endPeriod === 'AM') totalDays -= 0.5;
 
-    daysInput.value = `${totalDays}일`;
+    daysInput.value = formatDays(totalDays);
     updateTotalDays();
   }
 
@@ -477,30 +505,30 @@
     const rows = document.querySelectorAll('.leave-row');
     let sum = 0;
     let hasError = false;
-    rows.forEach(tr => {
-      const val = tr.querySelector('.row-days').value;
-      if (val.includes('오류')) hasError = true;
+    rows.forEach(row => {
+      const val = row.querySelector('.row-days').value;
+      if (val.includes('Error')) hasError = true;
       const num = parseFloat(val);
       if (!isNaN(num)) sum += num;
     });
-    totalDaysEl.textContent = hasError ? '기간 확인 필요' : `${sum}일`;
+    totalDaysEl.textContent = hasError ? 'Please check dates' : formatDays(sum);
   }
 
-  function attachRowEvents(tr) {
-    tr.querySelectorAll('.row-start, .row-end, .row-start-period, .row-end-period').forEach(el => {
-      el.addEventListener('change', () => calcRowDays(tr));
+  function attachRowEvents(row) {
+    row.querySelectorAll('.row-start, .row-end, .row-start-period, .row-end-period').forEach(el => {
+      el.addEventListener('change', () => calcRowDays(row));
     });
-    tr.querySelector('.remove-row-btn').addEventListener('click', () => {
+    row.querySelector('.remove-row-btn').addEventListener('click', () => {
       if (document.querySelectorAll('.leave-row').length <= 1) return;
-      tr.remove();
+      row.remove();
       updateTotalDays();
     });
   }
 
   function addLeaveRow() {
-    const tr = createLeaveRow();
-    leaveRowsBody.appendChild(tr);
-    attachRowEvents(tr);
+    const row = createLeaveRow();
+    leaveRowsBody.appendChild(row);
+    attachRowEvents(row);
   }
 
   addRowBtn.addEventListener('click', addLeaveRow);
@@ -520,14 +548,14 @@
     e.preventDefault();
 
     document.querySelectorAll('.leave-row').forEach(calcRowDays);
-    const hasError = Array.from(document.querySelectorAll('.row-days')).some(el => el.value.includes('오류'));
+    const hasError = Array.from(document.querySelectorAll('.row-days')).some(el => el.value.includes('Error'));
     if (hasError) {
-      showStatus('error', '휴가 기간을 다시 확인해주세요. (종료일이 시작일보다 빠르거나 같은 날 오후→오전으로 설정되어 있습니다)');
+      showStatus('error', 'Please check the leave dates. (End date is before start date, or same-day PM→AM is set)');
       return;
     }
 
     submitBtn.disabled = true;
-    submitBtn.textContent = '제출 중...';
+    submitBtn.textContent = 'Submitting...';
     statusMsg.className = '';
 
     try {
@@ -538,7 +566,7 @@
       });
 
       if (response.ok) {
-        showStatus('success', '휴가계 신청서가 정상적으로 제출되었습니다.');
+        showStatus('success', 'Your vacation request has been submitted successfully.');
         form.reset();
         document.getElementById('applydate').valueAsDate = new Date();
         leaveRowsBody.innerHTML = '';
@@ -546,14 +574,14 @@
         updateTotalDays();
       } else {
         const data = await response.json().catch(() => null);
-        const msg = data && data.errors ? data.errors.map(err => err.message).join(', ') : '제출 중 오류가 발생했습니다.';
+        const msg = data && data.errors ? data.errors.map(err => err.message).join(', ') : 'An error occurred while submitting. Please try again.';
         showStatus('error', msg);
       }
     } catch (err) {
-      showStatus('error', '네트워크 오류로 제출하지 못했습니다. 다시 시도해주세요.');
+      showStatus('error', 'Network error — could not submit. Please try again.');
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = '신청서 제출';
+      submitBtn.textContent = 'Submit Request';
     }
   });
 </script>
