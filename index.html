@@ -7,15 +7,58 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
+  :root {
+    --bg: #14202B;
+    --text: #F1E9D8;
+    --text-muted: #9FB0B8;
+    --accent: #B0925A;
+    --accent-hover: #C6A56C;
+    --accent-text: #14202B;
+    --row-bg: #1B2E3B;
+    --toggle-bg: #1B2E3B;
+    --toggle-border: #2E4453;
+  }
+
+  html[data-theme="light"] {
+    --bg: #F7F3EA;
+    --text: #14202B;
+    --text-muted: #5E6C74;
+    --accent: #B0925A;
+    --accent-hover: #9C7F49;
+    --accent-text: #FFFFFF;
+    --row-bg: #FFFFFF;
+    --toggle-bg: #FFFFFF;
+    --toggle-border: #DDD3C0;
+  }
+
   body {
     font-family: -apple-system, 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
-    background: #14202B;
-    color: #F1E9D8;
+    background: var(--bg);
+    color: var(--text);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: 60px 20px;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+
+  #theme-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--toggle-bg);
+    border: 1px solid var(--toggle-border);
+    color: var(--text);
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
   }
 
   h1 {
@@ -25,14 +68,14 @@
   }
 
   p.desc {
-    color: #9FB0B8;
+    color: var(--text-muted);
     font-size: 0.9rem;
     margin-bottom: 36px;
   }
 
   #generate-btn {
-    background: #B0925A;
-    color: #14202B;
+    background: var(--accent);
+    color: var(--accent-text);
     border: none;
     padding: 17px 43px;
     font-size: 1.2rem;
@@ -42,7 +85,7 @@
     transition: transform 0.15s ease, background 0.2s ease;
   }
 
-  #generate-btn:hover { background: #C6A56C; }
+  #generate-btn:hover { background: var(--accent-hover); }
   #generate-btn:active { transform: scale(0.97); }
 
   #result {
@@ -58,14 +101,15 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    background: #1B2E3B;
+    background: var(--row-bg);
     border-radius: 8px;
     padding: 14px 16px;
+    transition: background 0.2s ease;
   }
 
   .set-label {
     font-size: 0.78rem;
-    color: #9FB0B8;
+    color: var(--text-muted);
     width: 44px;
     flex-shrink: 0;
   }
@@ -99,6 +143,8 @@
 </head>
 <body>
 
+<button id="theme-toggle" aria-label="테마 전환" title="다크/화이트 모드 전환">🌙</button>
+
 <h1>로또 번호 생성기</h1>
 <p class="desc">버튼을 누르면 5세트를 한 번에 생성합니다.</p>
 
@@ -107,6 +153,23 @@
 <div id="result"></div>
 
 <script>
+  const themeToggleBtn = document.getElementById('theme-toggle');
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    themeToggleBtn.textContent = theme === 'light' ? '☀️' : '🌙';
+    localStorage.setItem('theme', theme);
+  }
+
+  const savedTheme = localStorage.getItem('theme')
+    || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+  applyTheme(savedTheme);
+
+  themeToggleBtn.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme');
+    applyTheme(current === 'light' ? 'dark' : 'light');
+  });
+
   function ballClass(n) {
     if (n <= 10) return 'b1';
     if (n <= 20) return 'b2';
