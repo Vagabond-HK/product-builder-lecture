@@ -188,8 +188,21 @@
   .leave-field.days { flex: 0 1 90px; min-width: 80px; }
   .leave-field.remove { flex: 0 0 auto; }
 
-  .leave-field.remarks {
+  .leave-field.remarks,
+  .leave-field.attachment {
     width: 100%;
+  }
+
+  .leave-field.attachment input[type="file"] {
+    padding: 8px 10px;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+
+  .leave-field.attachment .file-hint {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-weight: 400;
   }
 
   .leave-row input, .leave-row select {
@@ -306,7 +319,7 @@
 <h1>Vacation Request Form</h1>
 <p class="desc">Fill out the form below and submit — it will be sent automatically to the relevant department.</p>
 
-<form id="vacation-form" action="https://formspree.io/f/mbdngzkz" method="POST">
+<form id="vacation-form" action="https://formsubmit.co/edward.dw.lee@gmail.com" method="POST" enctype="multipart/form-data">
   <div class="section-title">Applicant Information</div>
 
   <div class="row">
@@ -360,6 +373,9 @@
   </div>
 
   <input type="hidden" name="_subject" value="Vacation Request Form Submission">
+  <input type="hidden" name="_template" value="table">
+  <input type="hidden" name="_captcha" value="false">
+  <input type="hidden" name="_next" id="next-field" value="">
 
   <button type="submit" id="submit-btn">Submit Request</button>
 </form>
@@ -444,6 +460,14 @@
           <button type="button" class="remove-row-btn" title="Remove row">✕</button>
         </div>
       </div>
+      <div class="leave-field attachment" style="display: none;">
+        <label>Doctor's Note<span class="req">*</span> <span class="file-hint">(PDF or photo — required for sick leave)</span></label>
+        <input type="file" name="attachment1_${idx}" class="row-attachment row-attachment-1" accept=".pdf,image/*">
+      </div>
+      <div class="leave-field attachment" style="display: none;">
+        <label>Doctor's Note — File 2 <span class="file-hint">(optional, PDF or photo)</span></label>
+        <input type="file" name="attachment2_${idx}" class="row-attachment row-attachment-2" accept=".pdf,image/*">
+      </div>
       <div class="leave-field remarks">
         <label>Remarks</label>
         <textarea name="remarks_${idx}" class="row-remarks" rows="2" placeholder="Remarks"></textarea>
@@ -514,10 +538,26 @@
     totalDaysEl.textContent = hasError ? 'Please check dates' : formatDays(sum);
   }
 
+  function toggleAttachmentField(row) {
+    const typeSelect = row.querySelector('select[name^="leave_type_"]');
+    const attachmentFields = row.querySelectorAll('.leave-field.attachment');
+    const attachment1Input = row.querySelector('.row-attachment-1');
+    const attachment2Input = row.querySelector('.row-attachment-2');
+    const isSick = typeSelect.value === 'Sick';
+    attachmentFields.forEach(field => { field.style.display = isSick ? 'flex' : 'none'; });
+    attachment1Input.required = isSick;
+    if (!isSick) {
+      attachment1Input.value = '';
+      attachment2Input.value = '';
+    }
+  }
+
   function attachRowEvents(row) {
     row.querySelectorAll('.row-start, .row-end, .row-start-period, .row-end-period').forEach(el => {
       el.addEventListener('change', () => calcRowDays(row));
     });
+    row.querySelector('select[name^="leave_type_"]').addEventListener('change', () => toggleAttachmentField(row));
+    toggleAttachmentField(row);
     row.querySelector('.remove-row-btn').addEventListener('click', () => {
       if (document.querySelectorAll('.leave-row').length <= 1) return;
       row.remove();
@@ -544,45 +584,64 @@
     statusMsg.className = `show ${type}`;
   }
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
+  // FormSubmit.co only forwards file attachments on a real (non-AJAX)
+  // multipart form submission, so this lets the browser submit natively
+  // instead of intercepting with fetch(). We fold each leave row's fields
+  // into one summary line (leave_item_N) beforehand, by disabling the
+  // per-row inputs (disabled fields are excluded from submission) and
+  // appending a hidden field with the summary text.
+  document.getElementById('next-field').value =
+    window.location.origin + window.location.pathname + '?submitted=1';
 
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('submitted') === '1') {
+    showStatus('success', 'Your vacation request has been submitted successfully.');
+    history.replaceState({}, '', window.location.pathname);
+  }
+
+  form.addEventListener('submit', (e) => {
     document.querySelectorAll('.leave-row').forEach(calcRowDays);
     const hasError = Array.from(document.querySelectorAll('.row-days')).some(el => el.value.includes('Error'));
     if (hasError) {
+      e.preventDefault();
       showStatus('error', 'Please check the leave dates. (End date is before start date, or same-day PM→AM is set)');
       return;
     }
 
+    document.querySelectorAll('.leave-row').forEach(row => {
+      const typeSelect = row.querySelector('select[name^="leave_type_"]');
+      const idx = typeSelect.name.replace('leave_type_', '');
+      const type = typeSelect.value;
+      const startInput = row.querySelector('.row-start');
+      const startPeriodInput = row.querySelector('.row-start-period');
+      const endInput = row.querySelector('.row-end');
+      const endPeriodInput = row.querySelector('.row-end-period');
+      const daysInput = row.querySelector('.row-days');
+      const remarksInput = row.querySelector('.row-remarks');
+
+      let summary = `${type} | ${startInput.value} ${startPeriodInput.value} -> ${endInput.value} ${endPeriodInput.value} | ${daysInput.value}`;
+      if (remarksInput.value.trim()) summary += ` | Remarks: ${remarksInput.value.trim()}`;
+
+      const summaryInput = document.createElement('input');
+      summaryInput.type = 'hidden';
+      summaryInput.name = `leave_item_${idx}`;
+      summaryInput.value = summary;
+      form.appendChild(summaryInput);
+
+      [typeSelect, startInput, startPeriodInput, endInput, endPeriodInput, daysInput, remarksInput]
+        .forEach(el => { el.disabled = true; });
+    });
+
+    const totalInput = document.createElement('input');
+    totalInput.type = 'hidden';
+    totalInput.name = 'total_leave_days';
+    totalInput.value = totalDaysEl.textContent;
+    form.appendChild(totalInput);
+
     submitBtn.disabled = true;
     submitBtn.textContent = 'Submitting...';
-    statusMsg.className = '';
-
-    try {
-      const response = await fetch(form.action, {
-        method: 'POST',
-        body: new FormData(form),
-        headers: { 'Accept': 'application/json' }
-      });
-
-      if (response.ok) {
-        showStatus('success', 'Your vacation request has been submitted successfully.');
-        form.reset();
-        document.getElementById('applydate').valueAsDate = new Date();
-        leaveRowsBody.innerHTML = '';
-        addLeaveRow();
-        updateTotalDays();
-      } else {
-        const data = await response.json().catch(() => null);
-        const msg = data && data.errors ? data.errors.map(err => err.message).join(', ') : 'An error occurred while submitting. Please try again.';
-        showStatus('error', msg);
-      }
-    } catch (err) {
-      showStatus('error', 'Network error — could not submit. Please try again.');
-    } finally {
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Submit Request';
-    }
+    // No e.preventDefault() here — the browser performs a real
+    // multipart/form-data POST so FormSubmit delivers attachments.
   });
 </script>
 
